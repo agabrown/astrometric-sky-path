@@ -10,6 +10,9 @@ astrometric catalogue parameters and radial velocity. This results in the well-k
 on the sky. The output of the programme is directed to stdout, where it is picked up by the python script
 [`plotskypath.py`](./plotskypath.py) for making a plot of the source path.
 
+This primitive Python to C interfacing was a lazy option to quickly make a plot. The main purpose of this exercise was to
+learn more about using SOFA.
+
 __NOTE__ that the SOFA library is also used in [Astropy](http://www.astropy.org/) (in derived form, see [Astropy
 ERFA](https://github.com/astropy/astropy/tree/master/cextern/erfa)), but the calculation of coordinate directions including
 parallax and proper motion effects is not yet implemented as far as I can tell.
@@ -30,7 +33,7 @@ If you do this remember to create the `.so` file with
 
 and copy it by hand to the installation folder (`$(HOME)/lib` in this example).
 
-After installation of the SOFA libray do `make skypath` to create the `skypath` executable. Modify the [makefile](./makefile)
+After installation of the SOFA library do `make skypath` to create the `skypath` executable. Modify the [makefile](./makefile)
 if needed.
 
 ## Usage
