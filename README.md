@@ -3,10 +3,14 @@ Use the SOFA library to calculate the coordinate directions of a source as a fun
 proper motion.
 
 The [`skypath.c`](./skypath.c) programme uses a few functions from the [SOFA](http://www.iausofa.org/) ANSI-C library to
-calculate as a function of time the coordinate directions for a source with given astrometric catalogue parameters and radial
-velocity. This results in the well-known helix- or wave-like motions of sources on the sky. The output of the programme is
-directed to stdout, where it is picked up by the python script [`plotskypath.py`](./plotskypath.py) for making a plot of the
-source path.
+calculate as a function of time the coordinate directions, as seen from the observers position, for a source with given
+astrometric catalogue parameters and radial velocity. This results in the well-known helix- or wave-like motions of sources
+on the sky. The output of the programme is directed to stdout, where it is picked up by the python script
+[`plotskypath.py`](./plotskypath.py) for making a plot of the source path.
+
+__NOTE__ that the SOFA library is also used in [astropy](http://www.astropy.org/) (in derived form, see [Astropy
+ERFA](https://github.com/astropy/astropy/tree/master/cextern/erfa)), but the calculation of coordinate directions including
+parallax and proper motion effects is not yet implemented as far as I can tell.
 
 ## Installation
 
