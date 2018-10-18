@@ -285,19 +285,11 @@ void calcSkyPath(obsEpochs *theObsEpochs, int npoints, star *sofaStar, double *t
     deltaRaCosDec, double *deltaDec){
 
   int k;
-  double heliocentricEarth[2][3], barycentricEarth[2][3], pvMatrix[2][3];
+  double heliocentricEarth[2][3], barycentricEarth[2][3];
   double ra, dec;
-  double raZero, decZero, pmraZero, pmdecZero, parallaxZero, rvZero;
   double refModifiedJD;
   double zeropointJD, modifiedJD;
   double coordinateDirection[3];
-
-  for (k=0; k<3; k++) {
-    pvMatrix[0][k]=sofaStar->phaseSpaceCoordinates[0][k];
-    pvMatrix[1][k]=sofaStar->phaseSpaceCoordinates[1][k];
-  }
-
-  iauPvstar(pvMatrix, &raZero, &decZero, &pmraZero, &pmdecZero, &parallaxZero, &rvZero);
 
   iauEpj2jd(theObsEpochs->refEpJ, &zeropointJD, &refModifiedJD);
 
@@ -322,10 +314,10 @@ void calcSkyPath(obsEpochs *theObsEpochs, int npoints, star *sofaStar, double *t
      * Calculate the sky path as (delta_ra*cos(dec), delta_dec) in mas and store in an output array. Take
      * care of the cases where the star crosses the RA=0 or RA=180 degrees line.
      */
-    deltaRaCosDec[k]=ra-raZero;
+    deltaRaCosDec[k]=ra-sofaStar->rightAscension;
     if (deltaRaCosDec[k] > PI) deltaRaCosDec[k]=deltaRaCosDec[k]-2*PI;
     if (deltaRaCosDec[k] < -PI) deltaRaCosDec[k]=deltaRaCosDec[k]+2*PI;
-    deltaDec[k]=dec-decZero;
+    deltaDec[k]=dec-sofaStar->declination;
     deltaRaCosDec[k]=deltaRaCosDec[k]*RADIAN_TO_DEGREE*3600.0*1000.0*cos(dec);
     deltaDec[k]=deltaDec[k]*RADIAN_TO_DEGREE*3600.0*1000.0;
   }
