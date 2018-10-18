@@ -26,7 +26,7 @@ void usage(char *argv[]);
 
 void usageLong(char *argv[]);
 
-void parseArgs(int argc, char *argv[], star *theStar, obsEpochs *theObsEpochs);
+void parseArgs(int argc, char *argv[], int *npoints, star *theStar, obsEpochs *theObsEpochs);
 
 void initCalc(star *theStar, obsEpochs *theObsEpochs);
 

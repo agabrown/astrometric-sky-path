@@ -50,6 +50,7 @@ void usageLong(char *argv[]) {
   fprintf(stderr,"  -refepoch     - Reference epoch for astrometric parameters\n");
   fprintf(stderr,"  -start        - Start epoch for skypath calculation (Julian)\n");
   fprintf(stderr,"  -interval     - Time interval for skypath calculation (Julian years)\n");
+  fprintf(stderr,"  -npoints      - Number of points to calculate between start and end epoch (default 1001)\n");
   fprintf(stderr,"  -h            - Show this help text\n");
   fprintf(stderr,"  --help        - Show this help text\n");
   exit(-1);
@@ -70,7 +71,7 @@ void usageLong(char *argv[]) {
  *
  *============================================================================
  */
-void parseArgs(int argc, char *argv[], star *theStar, obsEpochs *theObsEpochs) {
+void parseArgs(int argc, char *argv[], int *npoints, star *theStar, obsEpochs *theObsEpochs) {
   int argCounter,k;
   int astrometryProvided=0;
   int phaseSpaceProvided=0;
@@ -79,18 +80,23 @@ void parseArgs(int argc, char *argv[], star *theStar, obsEpochs *theObsEpochs) {
   double *starParams;
   star sofaStar;
   static const char DELIMITER[1]=",";
+  static const int DEFAULT_NPOINTS=1001;
 
-  /* Check for correct usage */
+  *npoints = DEFAULT_NPOINTS;
 
+  /* Check if help is asked for.*/
   if (argc>1) {
-    if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-help") == 0
-        || strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "-h") == 0) {
-      usageLong(argv);
+    for (argCounter=1;argCounter<argc;argCounter++) {
+      if (strcmp(argv[argCounter], "--help") == 0 || strcmp(argv[argCounter], "-help") == 0
+          || strcmp(argv[argCounter], "--h") == 0 || strcmp(argv[argCounter], "-h") == 0) {
+        usageLong(argv);
+      }
     }
   }
 
   initCalc(theStar, theObsEpochs);
 
+  /* No command line arguments, run with default paramaters. */
   if (argc<2) return;
 
   starParams=dvector(6);
@@ -127,6 +133,11 @@ void parseArgs(int argc, char *argv[], star *theStar, obsEpochs *theObsEpochs) {
     if (strcmp(argv[argCounter], "-interval") == 0) {
       if (argc < argCounter+2) usage(argv);
       theObsEpochs->deltaEpJ=atof(argv[++argCounter]);
+    }
+
+    if (strcmp(argv[argCounter], "-npoints") == 0) {
+      if (argc < argCounter+2) usage(argv);
+      *npoints=atoi(argv[++argCounter]);
     }
   }
 
@@ -290,8 +301,8 @@ void calcSkyPath(obsEpochs *theObsEpochs, int npoints, star *sofaStar, double *t
 
   iauEpj2jd(theObsEpochs->refEpJ, &zeropointJD, &refModifiedJD);
 
-  for (k=0; k<= npoints; k++) {
-    times[k] = theObsEpochs->beginEpJ+k*(theObsEpochs->deltaEpJ/npoints);
+  for (k=0; k< npoints; k++) {
+    times[k] = theObsEpochs->beginEpJ+k*(theObsEpochs->deltaEpJ/(npoints-1));
     /*
      * Calculate the earth's position in ICRS coordinates centred on the Solar
      * system barycentre.

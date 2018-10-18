@@ -30,21 +30,20 @@ int main (int argc, char **argv) {
   double *times, *deltaRaCosDec, *deltaDec;
   star myStar, sofaStar;
   obsEpochs theObsEpochs;
+  int npoints;
 
-  const int NPOINTS=1000;
-
-  parseArgs(argc, argv, &myStar, &theObsEpochs);
+  parseArgs(argc, argv, &npoints, &myStar, &theObsEpochs);
   myUnitsToSofa(&myStar, &sofaStar);
 
-  deltaRaCosDec = dvector(NPOINTS);
-  deltaDec = dvector(NPOINTS);
-  times = dvector(NPOINTS);
-  calcSkyPath(&theObsEpochs, NPOINTS, &sofaStar, times, deltaRaCosDec, deltaDec);
+  deltaRaCosDec = dvector(npoints);
+  deltaDec = dvector(npoints);
+  times = dvector(npoints);
+  calcSkyPath(&theObsEpochs, npoints, &sofaStar, times, deltaRaCosDec, deltaDec);
 
   /*
    * Write out results.
    */
-  writeToStdout(NPOINTS, times, deltaRaCosDec, deltaDec);
+  writeToStdout(npoints, times, deltaRaCosDec, deltaDec);
 
   free_dvector(deltaRaCosDec);
   free_dvector(deltaDec);

@@ -45,6 +45,7 @@ def make_plot(args):
     skyPathCommand=['./skypath']
     refEpoch = np.float(args['refEpochString'])
     startEpoch = np.float(args['startEpochString'])
+    npoints = args['npoints']
 
     if (args['parEllipse']):
         skyPathCommandParallaxOnly=['./skypath']
@@ -63,6 +64,9 @@ def make_plot(args):
     if (args['timeIntervalString']!=None):
         skyPathCommand.append('-interval')
         skyPathCommand.append('{0}'.format(args['timeIntervalString']))
+    if (args['npoints']!=None):
+        skyPathCommand.append('-npoints')
+        skyPathCommand.append('{0}'.format(args['npoints']))
 
     if (args['parEllipse']):
         # TODO Better defaults handling in this case.
@@ -100,17 +104,20 @@ def make_plot(args):
 
     if (args['parEllipse']):
         resultB=subprocess.run(skyPathCommandParallaxOnly, stdout=subprocess.PIPE)
-        skyPath=resultB.stdout.splitlines()
-        times=np.empty(len(skyPath))
-        deltaRaCosDecParOnly=np.empty(len(skyPath))
-        deltaDecParOnly=np.empty(len(skyPath))
-        for i in range(len(skyPath)):
-            times[i], deltaRaCosDecParOnly[i], deltaDecParOnly[i] = skyPath[i].split()
+        skyPathB=resultB.stdout.splitlines()
+        timesB=np.empty(len(skyPathB))
+        deltaRaCosDecParOnly=np.empty(len(skyPathB))
+        deltaDecParOnly=np.empty(len(skyPathB))
+        for i in range(len(skyPathB)):
+            timesB[i], deltaRaCosDecParOnly[i], deltaDecParOnly[i] = skyPathB[i].split()
 
     fig=plt.figure(figsize=(8,8))
     if (args['parEllipse']):
         plt.plot(deltaRaCosDecParOnly, deltaDecParOnly,'k--',alpha=0.5)
-    plt.plot(deltaRaCosDec, deltaDec)
+    if args['plotDots']:
+        plt.plot(deltaRaCosDec, deltaDec, 'o')
+    else:
+        plt.plot(deltaRaCosDec, deltaDec)
     plt.scatter(deltaRaCosDec[0], deltaDec[0], c='r', marker='o', s=50)
     indref = np.searchsorted(times, refEpoch, side='right')-1
     plt.scatter(deltaRaCosDec[indref], deltaDec[indref], c='r', marker='+', s=50)
@@ -151,6 +158,10 @@ def parseCommandLineArguments():
             default=5.0)
     parser.add_argument("--plotLimits", dest="axisLimits", type=float, nargs=2, help="list of plot axis limits (low high) for both x and y")
     parser.add_argument("--parEllipse", action="store_true", dest="parEllipse", help="Show parallax ellipse")
+    parser.add_argument("--npoints", help="""Number of points to calculate between start and end
+            epoch""", type=int, default=1001)
+    parser.add_argument("-d", action="store_true", dest="plotDots", help="""Plot individual points instead
+            of a continuous line.""")
     parser.add_argument("-p", action="store_true", dest="pdfOutput", help="Make PDF plot")
     parser.add_argument("-b", action="store_true", dest="pngOutput", help="Make PNG plot")
     parser.add_argument("-c", action="store_true", dest="colourFigure", help="Make colour plot")
