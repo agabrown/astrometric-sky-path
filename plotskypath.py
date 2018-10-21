@@ -97,34 +97,38 @@ def make_plot(args):
     result=subprocess.run(skyPathCommand, stdout=subprocess.PIPE)
     skyPath=result.stdout.splitlines()
     times=np.empty(len(skyPath))
-    deltaRaCosDec=np.empty(len(skyPath))
-    deltaDec=np.empty(len(skyPath))
+    alpha=np.empty(len(skyPath))
+    delta=np.empty(len(skyPath))
+    xi=np.empty(len(skyPath))
+    eta=np.empty(len(skyPath))
     for i in range(len(skyPath)):
-        times[i], deltaRaCosDec[i], deltaDec[i] = skyPath[i].split()
+        times[i], alpha[i], delta[i], xi[i], eta[i] = skyPath[i].split()
 
     if (args['parEllipse']):
         resultB=subprocess.run(skyPathCommandParallaxOnly, stdout=subprocess.PIPE)
         skyPathB=resultB.stdout.splitlines()
         timesB=np.empty(len(skyPathB))
-        deltaRaCosDecParOnly=np.empty(len(skyPathB))
-        deltaDecParOnly=np.empty(len(skyPathB))
+        alphaParOnly=np.empty(len(skyPathB))
+        deltaParOnly=np.empty(len(skyPathB))
+        xiParOnly=np.empty(len(skyPathB))
+        etaParOnly=np.empty(len(skyPathB))
         for i in range(len(skyPathB)):
-            timesB[i], deltaRaCosDecParOnly[i], deltaDecParOnly[i] = skyPathB[i].split()
+            timesB[i], alphaParOnly[i], deltaParOnly[i], xiParOnly[i], etaParOnly[i] = skyPathB[i].split()
 
-    fig=plt.figure(figsize=(8,8))
+    fig=plt.figure(figsize=(9.0,8))
     if (args['parEllipse']):
-        plt.plot(deltaRaCosDecParOnly, deltaDecParOnly,'k--',alpha=0.5)
+        plt.plot(xiParOnly, etaParOnly,'k--',alpha=0.5)
     if args['plotDots']:
-        plt.plot(deltaRaCosDec, deltaDec, 'o')
+        plt.plot(xi, eta, 'o')
     else:
-        plt.plot(deltaRaCosDec, deltaDec)
-    plt.scatter(deltaRaCosDec[0], deltaDec[0], c='r', marker='o', s=50)
+        plt.plot(xi, eta)
+    plt.scatter(xi[0], eta[0], c='r', marker='o', s=50)
     indref = np.searchsorted(times, refEpoch, side='right')-1
-    plt.scatter(deltaRaCosDec[indref], deltaDec[indref], c='r', marker='+', s=50)
-    plt.scatter(deltaRaCosDec[-1], deltaDec[-1], c='r', marker='^', s=50)
+    plt.scatter(xi[indref], eta[indref], c='r', marker='+', s=50)
+    plt.scatter(xi[-1], eta[-1], c='r', marker='^', s=50)
 
-    plt.xlabel("$\\Delta\\alpha\\cos\\delta$ [mas]")
-    plt.ylabel("$\\Delta\\delta$ [mas]")
+    plt.xlabel("$\\xi$ [mas]")
+    plt.ylabel("$\\eta$ [mas]")
     plt.grid()
     if (args['axisLimits']!=None):
         plt.xlim(args['axisLimits'])

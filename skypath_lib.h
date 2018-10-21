@@ -34,5 +34,5 @@ void myUnitsToSofa(star *myStar, star *sofaStar);
 
 void sofaUnitsToMine(star *sofaStar, star *myStar);
 
-void calcSkyPath(obsEpochs *theObsEpochs, int npoints, star *sofaStar, double *times, double* deltaRaCosDec, double
-        *deltaDec);
+void calcSkyPath(obsEpochs *theObsEpochs, int npoints, star *sofaStar, double *times, 
+        double* alpha, double *delta, double *xi, double *eta);

@@ -276,24 +276,37 @@ void sofaUnitsToMine(star *sofaStar, star *myStar) {
  * npoints - number of points on path.
  * sofaStar - struct star IN SOFA UNITS
  * times - output time array (Julian Epoch)
- * deltaRaCosDec - output array with values of delta(RA)*cos(DEC)
- * deltaDec - output array with values of delta(DEC)
+ * alpha - output array with values of right ascension
+ * delta - output array with values of declination
+ * xi - output array with local plane coordinate equivalent to Delta(alpha)*cos(delta)
+ * eta - output array with local plane coordinate equivalent to Delta(delta)
  *
  *===========================================================================
  */
-void calcSkyPath(obsEpochs *theObsEpochs, int npoints, star *sofaStar, double *times, double*
-    deltaRaCosDec, double *deltaDec){
+void calcSkyPath(obsEpochs *theObsEpochs, int npoints, star *sofaStar, double *times, 
+        double* alpha, double *delta, double *xi, double *eta){
 
-  int k, mod;
+  int k;
   double heliocentricEarth[2][3], barycentricEarth[2][3];
-  double ra, dec, raPrevious;
+  double ra, dec, norm;
   double refModifiedJD;
   double zeropointJD, modifiedJD;
   double coordinateDirection[3];
+  double p[3], q[3], r[3];
 
   iauEpj2jd(theObsEpochs->refEpJ, &zeropointJD, &refModifiedJD);
 
-  raPrevious = sofaStar->rightAscension;
+  p[0] = -sin(sofaStar->rightAscension);
+  p[1] = cos(sofaStar->rightAscension);
+  p[2] = 0.0;
+
+  q[0] = -sin(sofaStar->declination)*cos(sofaStar->rightAscension);
+  q[1] = -sin(sofaStar->declination)*sin(sofaStar->rightAscension);
+  q[2] = cos(sofaStar->declination);
+
+  r[0] = cos(sofaStar->declination)*cos(sofaStar->rightAscension);
+  r[1] = cos(sofaStar->declination)*sin(sofaStar->rightAscension);
+  r[2] = sin(sofaStar->declination);
 
   for (k=0; k< npoints; k++) {
     times[k] = theObsEpochs->beginEpJ+k*(theObsEpochs->deltaEpJ/(npoints-1));
@@ -305,26 +318,25 @@ void calcSkyPath(obsEpochs *theObsEpochs, int npoints, star *sofaStar, double *t
     iauEpv00(zeropointJD, modifiedJD, heliocentricEarth, barycentricEarth);
     /*
      * Calculate the coordinate direction to the star accounting only for the proper motion and parallax.
-     * This gives the path on the sky as (alpha(t), delta(t)) without accounting for all the other
-     * effects that determine the actually observed direction at epoch t.
+     * This gives the astrometric path on the sky as (alpha(t), delta(t)).
      */
     iauPmpx(sofaStar->rightAscension, sofaStar->declination, sofaStar->properMotionRa,
             sofaStar->properMotionDec, sofaStar->parallax, sofaStar->radialVelocity,
             times[k]-theObsEpochs->refEpJ, barycentricEarth[0], coordinateDirection);
     iauC2s(coordinateDirection, &ra, &dec);
+
+    alpha[k] = ra;
+    delta[k] = dec;
+
     /*
-     * Calculate the sky path as (delta_ra*cos(dec), delta_dec) in mas and store in an output array. Take
-     * care of the cases where the star crosses the RA=0 or RA=180 degrees line, as well as the
-     * cases of a star passing close to one of the poles.
+     * Calculate the local plane coordinates.
      */
-    mod = 0;
-    if (ra-raPrevious > PI && ra*raPrevious<0.0) mod=-2;
-    if (ra-raPrevious < -PI && ra*raPrevious<0.0) mod=2;
-    ra = ra + mod*PI;
-    deltaRaCosDec[k]=ra-sofaStar->rightAscension;
-    raPrevious=ra;
-    deltaDec[k]=dec-sofaStar->declination;
-    deltaRaCosDec[k]=deltaRaCosDec[k]*RADIAN_TO_DEGREE*3600.0*1000.0*cos(dec);
-    deltaDec[k]=deltaDec[k]*RADIAN_TO_DEGREE*3600.0*1000.0;
+    norm = r[0]*coordinateDirection[0]+r[1]*coordinateDirection[1]+r[2]*coordinateDirection[2];
+
+    xi[k] = p[0]*coordinateDirection[0]+p[1]*coordinateDirection[1]+p[2]*coordinateDirection[2];
+    xi[k] = xi[k]/norm*RADIAN_TO_DEGREE*3600.0*1000.0;
+
+    eta[k] = q[0]*coordinateDirection[0]+q[1]*coordinateDirection[1]+q[2]*coordinateDirection[2];
+    eta[k] = eta[k]/norm*RADIAN_TO_DEGREE*3600.0*1000.0;
   }
 }

@@ -8,4 +8,4 @@
 
 #include "skypath_lib.h"
 
-void writeToStdout(int npoints, double *times, double* deltaRaCosDec, double *deltaDec);
+void writeToStdout(int npoints, double *times, double* alpha, double *delta, double *xi, double *eta);

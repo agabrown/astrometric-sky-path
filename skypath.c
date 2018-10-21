@@ -27,7 +27,7 @@
 
 int main (int argc, char **argv) {
 
-  double *times, *deltaRaCosDec, *deltaDec;
+  double *times, *alpha, *delta, *xi, *eta;
   star myStar, sofaStar;
   obsEpochs theObsEpochs;
   int npoints;
@@ -35,26 +35,30 @@ int main (int argc, char **argv) {
   parseArgs(argc, argv, &npoints, &myStar, &theObsEpochs);
   myUnitsToSofa(&myStar, &sofaStar);
 
-  deltaRaCosDec = dvector(npoints);
-  deltaDec = dvector(npoints);
+  alpha = dvector(npoints);
+  delta = dvector(npoints);
+  xi = dvector(npoints);
+  eta = dvector(npoints);
   times = dvector(npoints);
-  calcSkyPath(&theObsEpochs, npoints, &sofaStar, times, deltaRaCosDec, deltaDec);
+  calcSkyPath(&theObsEpochs, npoints, &sofaStar, times, alpha, delta, xi, eta);
 
   /*
    * Write out results.
    */
-  writeToStdout(npoints, times, deltaRaCosDec, deltaDec);
+  writeToStdout(npoints, times, alpha, delta, xi, eta);
 
-  free_dvector(deltaRaCosDec);
-  free_dvector(deltaDec);
+  free_dvector(alpha);
+  free_dvector(delta);
+  free_dvector(xi);
+  free_dvector(eta);
   free_dvector(times);
 
   return 0;
 }
 
-void writeToStdout(int npoints, double *times, double* deltaRaCosDec, double *deltaDec) {
+void writeToStdout(int npoints, double *times, double* alpha, double *delta, double *xi, double *eta) {
   int k;
   for (k=0; k<npoints; k++) {
-    printf("%14.6f  %12.6f  %12.6f\n", times[k], deltaRaCosDec[k], deltaDec[k]);
+    printf("%14.6f  %14.10g  %14.10g  %12.6f  %12.6f\n", times[k], alpha[k], delta[k], xi[k], eta[k]);
   }
 }
