@@ -59,6 +59,6 @@ int main (int argc, char **argv) {
 void writeToStdout(int npoints, double *times, double* alpha, double *delta, double *xi, double *eta) {
   int k;
   for (k=0; k<npoints; k++) {
-    printf("%14.6f  %14.10g  %14.10g  %12.6f  %12.6f\n", times[k], alpha[k], delta[k], xi[k], eta[k]);
+    printf("%14.6f  %18.14g  %18.14g  %12.6f  %12.6f\n", times[k], alpha[k], delta[k], xi[k], eta[k]);
   }
 }
