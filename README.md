@@ -8,7 +8,11 @@ The [`skypath.c`](./skypath.c) programme uses a few functions from the [SOFA](ht
 calculate as a function of time the coordinate directions, as seen from the observers position, for a source with given
 astrometric catalogue parameters and radial velocity. This results in the well-known helix- or wave-like motions of sources
 on the sky. The output of the programme is directed to stdout, where it is picked up by the python script
-[`plotskypath.py`](./plotskypath.py) for making a plot of the source path.
+[`plotskypath.py`](./plotskypath.py) for making a plot of the source path. The plot of the source path is
+done using so-called local plane coordinates which are defined by equation 1.2.22 in section 1.2 of the
+[Hipparcos documentation](https://ui.adsabs.harvard.edu/#abs/1997ESASP1200.....E/abstract) (see [this
+link](https://www.cosmos.esa.int/documents/532822/552851/vol1_all.pdf/99adf6e3-6893-4824-8fc2-8d3c9cbba2b5)
+for the PDF document). These local plane coordinates are also calculated by the `skypath.c` programme.
 
 This primitive Python to C interfacing was a lazy option to quickly make a plot. The main purpose of this exercise was to
 learn more about using SOFA.
