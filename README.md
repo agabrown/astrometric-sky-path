@@ -51,3 +51,6 @@ information. Note that the python script expects comma-separated lists of number
 The folder [PythonVersion](./PythonVersion) contains a python-only implementation of the calculation of
 the topocentric coordinate direction to a source. The corresponding
 [notebook](./PythonVersion/AstrometricSkyPaths.ipynb) shows how to use the `skypathtools` module.
+
+To run the python code [Astropy](http://www.astropy.org/) is required and the notebook requires
+[cartopy](https://scitools.org.uk/cartopy/docs/latest/) in addition.
