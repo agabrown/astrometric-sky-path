@@ -3,6 +3,10 @@ ccache/
 skypath
 skyPathIcrs.pdf
 skyPathIcrs.png
+.ipynb_checkpoints/
+PythonVersion/.ipynb_checkpoints/
+__pycache__/
+source_motion.pdf
 
 # Object files
 *.o

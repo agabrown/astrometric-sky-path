@@ -45,3 +45,9 @@ if needed.
 The `skypath` command can be invoked directly or through the python script. In both cases use the `-h` flag for usage
 information. Note that the python script expects comma-separated lists of numbers between quotes as input for the
 `--astrometry` or `--phaseSpace` command line arguments.
+
+## Python version
+
+The folder [PythonVersion](./PythonVersion) contains a python-only implementation of the calculation of
+the topocentric coordinate direction to a source. The corresponding
+[notebook](./PythonVersion/AstrometricSkyPaths.ipynb) shows how to use the `skypathtools` module.
