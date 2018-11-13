@@ -73,7 +73,7 @@ def epoch_topocentric_coordinates(alpha, delta, parallax, mura, mudec, vrad, t, 
     Returns
     -------
     
-    Arrays alpha, delta, xi, eta.
+    Arrays alpha, delta, xi, eta. Units are radians for (alpha, delta) and mas for (xi, eta).
     """
     
     # Normal triad, defined at the reference epoch.
@@ -94,6 +94,65 @@ def epoch_topocentric_coordinates(alpha, delta, parallax, mura, mudec, vrad, t, 
 
     uO = np.repeat(r, t.size).reshape((r.size, t.size))
     uO = uO + np.tensordot((p*murarad + q*mudecrad + r*mur),(tB-refepoch),axes=0) - plxrad*bO_bcrs
+    
+    # Local plane coordinates which approximately equal delta_alpha*cos(delta) and delta_delta
+    xi = np.dot(p,uO)/np.dot(r,uO)*_radtomas
+    eta = np.dot(q,uO)/np.dot(r,uO)*_radtomas
+
+    alpha_obs = np.arctan2(uO[1,:], uO[0,:])
+    delta_obs = np.arctan2(uO[2,:],np.sqrt(uO[0,:]**2+uO[1,:]**2))
+                 
+    return alpha_obs, delta_obs, xi, eta
+
+def epoch_barycentric_coordinates(alpha, delta, parallax, mura, mudec, vrad, t, refepoch):
+    """
+    For each observation epoch calculate the barycentric coordinate directions (alpha(t), delta(t)) given
+    the astrometric parameters of a source, the observation times. Also calculate the local plane
+    coordinates xi(t) and eta(t). 
+    
+    HERE THE PARALLACTIC MOTION IS THUS NOT INCLUDED and one obtains a sky path as seen by an observer at
+    the solar system barycentre.
+
+    The code is partly based on the SOFA library (http://www.iausofa.org/) pmpx.c code.
+
+    Parameters
+    ----------
+    
+    alpha : float
+        Right ascension at reference epoch (radians)
+    delta : float
+        Declination at reference epoch (radians)
+    parallax : float
+        Parallax (mas), negative values allowed
+    mura : float
+        Proper motion in right ascension, including cos(delta) factor (mas/yr)
+    mudec : float
+        Proper motion in declination (mas/yr)
+    vrad : float
+        Radial velocity (km/s)
+    t : float array
+        Observation times (Julian year TCB)
+    refepoch : float
+        Reference epoch (Julian year TCB)
+                
+    Returns
+    -------
+    
+    Arrays alpha, delta, xi, eta. Units are radians for (alpha, delta) and mas for (xi, eta).
+    """
+    
+    # Normal triad, defined at the reference epoch.
+    p = np.array([-np.sin(alpha), np.cos(alpha), 0.0])
+    q = np.array([-np.sin(delta)*np.cos(alpha), -np.sin(delta)*np.sin(alpha), np.cos(delta)])
+    r = np.array([np.cos(delta)*np.cos(alpha), np.cos(delta)*np.sin(alpha), np.sin(delta)])
+   
+    plxrad = parallax*_mastorad
+    murarad = mura*_mastorad
+    mudecrad = mudec*_mastorad
+    mur = vrad*_kmps_to_aupyr*np.abs(plxrad)
+
+    uO = np.repeat(r, t.size).reshape((r.size, t.size))
+    uO = uO + np.tensordot((p*murarad + q*mudecrad + r*mur),(t-refepoch),axes=0)
     
     # Local plane coordinates which approximately equal delta_alpha*cos(delta) and delta_delta
     xi = np.dot(p,uO)/np.dot(r,uO)*_radtomas
