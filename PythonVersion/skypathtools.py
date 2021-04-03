@@ -12,10 +12,12 @@ from astropy import constants
 from astropy import units
 from astropy.time import Time
 from astropy.coordinates import get_body_barycentric
+from erfa import pmpx, c2s, epj2jd, pmsafe, s2c
 
 _radtomas = (180*3600*1000)/np.pi
 _mastorad = np.pi/(180*3600*1000)
 _kmps_to_aupyr = (units.year.to(units.s)*units.km.to(units.m))/constants.au.value
+
 
 def ephemeris_earth_astropy(t):
     """
@@ -40,7 +42,130 @@ def ephemeris_earth_astropy(t):
     earthEph = get_body_barycentric('earth', times)
     return np.vstack((earthEph.x.value, earthEph.y.value, earthEph.z.value))
 
+
 def epoch_topocentric_coordinates(alpha, delta, parallax, mura, mudec, vrad, t, refepoch, ephem):
+    """
+    For each observation epoch calculate the topocentric coordinate directions (alpha(t), delta(t)) given
+    the astrometric parameters of a source, the observation times, and the ephemeris (in the BCRS) for
+    the observer. Also calculate the local plane coordinates xi(t) and eta(t).
+
+    The code uses the Pyhton ERFA routines (https://pyerfa.readthedocs.io/)
+
+    Parameters
+    ----------
+    
+    alpha : float
+        Right ascension at reference epoch (radians)
+    delta : float
+        Declination at reference epoch (radians)
+    parallax : float
+        Parallax (mas), negative values allowed
+    mura : float
+        Proper motion in right ascension, including cos(delta) factor (mas/yr)
+    mudec : float
+        Proper motion in declination (mas/yr)
+    vrad : float
+        Radial velocity (km/s)
+    t : float array
+        Observation times (Julian year TCB)
+    refepoch : float
+        Reference epoch (Julian year TCB)
+    ephem : function
+        Funtion providing the observer's ephemeris in BCRS at times t (units of AU)
+                
+    Returns
+    -------
+    
+    alpha, delta, xi, eta : float arrays
+        The coordinates directions to the sources for each time t and the corresponsing local plane coordinates (xi,
+        eta), referred to the source direction at the reference epoch.
+        Units are radians for (alpha, delta) and mas for (xi, eta).
+    """
+    # Normal triad, defined at the reference epoch.
+    p = np.array([-np.sin(alpha), np.cos(alpha), 0.0])
+    q = np.array([-np.sin(delta)*np.cos(alpha), -np.sin(delta)*np.sin(alpha), np.cos(delta)])
+    r = np.array([np.cos(delta)*np.cos(alpha), np.cos(delta)*np.sin(alpha), np.sin(delta)])
+
+    # Calculate observer's ephemeris.
+    bO_bcrs = ephem(t)
+
+    # Unit conversions
+    plx = parallax/1000.0
+    pmra = mura*_mastorad/np.cos(delta)
+    pmdec = mudec*_mastorad
+
+    uO = pmpx(alpha, delta, pmra, pmdec, plx, vrad, t-refepoch, bO_bcrs.T)
+
+    # Local plane coordinates which approximately equal delta_alpha*cos(delta) and delta_delta
+    xi = np.dot(p,uO.T)/np.dot(r,uO.T)*_radtomas
+    eta = np.dot(q,uO.T)/np.dot(r,uO.T)*_radtomas
+
+    alpha_obs, delta_obs = c2s(uO)
+
+    return alpha_obs, delta_obs, xi, eta
+
+
+def epoch_barycentric_coordinates(alpha, delta, parallax, mura, mudec, vrad, t, refepoch):
+    """
+    For each observation epoch calculate the barycentric coordinate directions (alpha(t), delta(t)) given
+    the astrometric parameters of a source, the observation times. Also calculate the local plane
+    coordinates xi(t) and eta(t). 
+    
+    HERE THE PARALLACTIC MOTION IS THUS NOT INCLUDED and one obtains a sky path as seen by an observer at
+    the solar system barycentre.
+
+    The code uses the Pyhton ERFA routines (https://pyerfa.readthedocs.io/)
+
+    Parameters
+    ----------
+    
+    alpha : float
+        Right ascension at reference epoch (radians)
+    delta : float
+        Declination at reference epoch (radians)
+    parallax : float
+        Parallax (mas), negative values allowed
+    mura : float
+        Proper motion in right ascension, including cos(delta) factor (mas/yr)
+    mudec : float
+        Proper motion in declination (mas/yr)
+    vrad : float
+        Radial velocity (km/s)
+    t : float array
+        Observation times (Julian year TCB)
+    refepoch : float
+        Reference epoch (Julian year TCB)
+                
+    Returns
+    -------
+    
+    alpha, delta, xi, eta : float arrays
+        The coordinates directions to the sources for each time t and the corresponsing local plane coordinates (xi,
+        eta), referred to the source direction at the reference epoch.
+        Units are radians for (alpha, delta) and mas for (xi, eta).
+    """
+    # Normal triad, defined at the reference epoch.
+    p = np.array([-np.sin(alpha), np.cos(alpha), 0.0])
+    q = np.array([-np.sin(delta)*np.cos(alpha), -np.sin(delta)*np.sin(alpha), np.cos(delta)])
+    r = np.array([np.cos(delta)*np.cos(alpha), np.cos(delta)*np.sin(alpha), np.sin(delta)])
+
+    # Unit conversions
+    plx = parallax/1000.0
+    pmra = mura*_mastorad/np.cos(delta)
+    pmdec = mudec*_mastorad
+    zpjdref, mjdred = epj2jd(refepoch)
+    zpjd, mjd = epj2jd(t)
+
+    alpha_obs, delta_obs, _, _, _, _ = pmsafe(alpha, delta, pmra, pmdec, plx, vrad, zpjdref, mjdred, zpjd, mjd)
+    uO = s2c(alpha_obs, delta_obs)
+
+    # Local plane coordinates which approximately equal delta_alpha*cos(delta) and delta_delta
+    xi = np.dot(p,uO.T)/np.dot(r,uO.T)*_radtomas
+    eta = np.dot(q,uO.T)/np.dot(r,uO.T)*_radtomas
+
+    return alpha_obs, delta_obs, xi, eta
+
+def epoch_topocentric_coordinates_noerfa(alpha, delta, parallax, mura, mudec, vrad, t, refepoch, ephem):
     """
     For each observation epoch calculate the topocentric coordinate directions (alpha(t), delta(t)) given
     the astrometric parameters of a source, the observation times, and the ephemeris (in the BCRS) for
@@ -104,7 +229,8 @@ def epoch_topocentric_coordinates(alpha, delta, parallax, mura, mudec, vrad, t, 
                  
     return alpha_obs, delta_obs, xi, eta
 
-def epoch_barycentric_coordinates(alpha, delta, parallax, mura, mudec, vrad, t, refepoch):
+
+def epoch_barycentric_coordinates_noerfa(alpha, delta, parallax, mura, mudec, vrad, t, refepoch):
     """
     For each observation epoch calculate the barycentric coordinate directions (alpha(t), delta(t)) given
     the astrometric parameters of a source, the observation times. Also calculate the local plane
